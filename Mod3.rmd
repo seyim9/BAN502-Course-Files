@@ -1,0 +1,60 @@
+---
+title: "mod3"
+author: "Sarah Yim"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r}
+library(tidyverse);
+library(lubridate);
+library(tidymodels);
+bike = read_csv("bike_cleaned.csv");
+bike = bike %>% mutate(dteday = mdy(dteday));
+bike = bike %>% mutate_if(is.character, as_factor);
+bike = bike %>% mutate(hr = as_factor(hr));
+```
+
+Q1:12163
+Q2: similar representation of the variable
+Q3: 0.6209 
+Q4: some are negative + 600 max
+Q5:0.6224436 xxx 0.6270572	
+```{r}
+set.seed(1234);
+bike_split = initial_split(bike, prop=0.70, strata = count);
+train_bike = training(bike_split);
+test_bike =  testing(bike_split);
+
+nrow(train_bike);
+
+bike_recipe = recipe(count ~ season + mnth + hr + holiday + weekday + temp + weathersit, train_bike);
+
+bike_lm_model =
+  linear_reg() %>%
+  set_engine("lm");
+
+bike_workflow =
+  workflow() %>%
+  add_model(bike_lm_model) %>%
+  add_recipe(bike_recipe);
+
+bike_fit=fit(bike_workflow, train_bike);
+
+summary(bike_fit$fit$fit$fit);
+
+
+
+ggplot(train_bike,aes(count)) + 
+  geom_histogram()
+mean(train_bike$count)
+
+
+pred_bike2=predict(bike_fit, new_data = train_bike)
+summary(pred_bike2)
+
+
+bike_fit %>% predict(test_bike) %>% bind_cols(test_bike) %>% metrics(truth = count, estimate = .pred)
+
+```
+
